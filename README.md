@@ -15,3 +15,8 @@ which makes easier to buy or to sell some used things in KAIST.
 ## Setting development environment
 
 [Check wiki](https://github.com/sparcs-kaist/jangteo-api/wiki/Getting-started)
+
+## Troubleshooting
+
+That's too bad...
+
