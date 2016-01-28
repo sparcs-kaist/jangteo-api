@@ -4,7 +4,8 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node .",
-    "pretest": "jshint ."
+    "pretest": "jshint .",
+    "test": "mocha"
   },
   "dependencies": {
     "compression": "^1.0.3",
@@ -22,6 +23,6 @@
   "repository": {
     "type": "",
     "url": ""
-  },
+  }
   "description": "jangteo-api"
 }

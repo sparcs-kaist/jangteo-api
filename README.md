@@ -1,5 +1,7 @@
 # jangteo-api
 
+![travis](https://travis-ci.org/sparcs-kaist/jangteo-api.svg?branch=master)
+
 - Language: JavaScript(Node.js 4.2.6 LTS)
 - Framework: [Loopback.io](https://loopback.io)
 - Testing framework: mocha
