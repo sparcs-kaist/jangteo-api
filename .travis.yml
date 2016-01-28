@@ -1,4 +1,15 @@
-languages: node_js
+language: node_js
 node_js:
   - "4.2"
-
+env:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+before_install:
+  - npm install -g strongloop
+  - npm install -g mocha
+install: npm install
