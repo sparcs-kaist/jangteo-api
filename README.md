@@ -1,6 +1,6 @@
 # jangteo-api
 
-![travis](https://travis-ci.org/sparcs-kaist/jangteo-api.svg?branch=master)
+[![travis](https://travis-ci.org/sparcs-kaist/jangteo-api.svg?branch=master)](https://travis-ci.org/sparcs-kaist/jangteo-api)
 
 - Language: JavaScript(Node.js 4.2.6 LTS)
 - Framework: [Loopback.io](https://loopback.io)
