@@ -1,6 +1,11 @@
 {
   "db": {
     "name": "db",
-    "connector": "memory"
+    "host": "localhost",
+    "port": 3306,
+    "database": "jangteo",
+    "username": "jangteo",
+    "password": "tnfqkrtm",
+    "connector": "mysql"
   }
 }
