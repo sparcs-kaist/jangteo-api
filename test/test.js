@@ -1,6 +1,6 @@
 /* jshint expr: true */
 var should = require('should');
-var Client = require('./../server/boot/sparcssso.js')
+var Client = require('./../server/boot/sparcssso.js');
 
 describe('example', function() {
   describe('example suite', function() {
@@ -11,10 +11,12 @@ describe('example', function() {
 });
 
 describe('sparcssso', function() {
-    test_client = new Client(is_test=true);
+    var testClient = new Client(true);
     describe('test suite', function() {
         it('return valid login url', function() {
-            test_client.get_login_url('http://example.com/').should.equal('https://sparcssso.kaist.ac.kr/api/v1/token/require/?url=http://example.com/');
+            var result = 'https://sparcssso.kaist.ac.kr/api/v1/' +
+                         'token/require/?url=http://example.com/';
+            testClient.getLoginUrl('http://example.com/').should.equal(result);
         });
 
         it('return valid user info', function() {
@@ -22,15 +24,19 @@ describe('sparcssso', function() {
         });
 
         it('throw during getting user\'s point', function() {
-            (function() { test_client.get_point('test'); }).should.throw();
+            (function() {
+                testClient.getPoint('test');
+            }).should.throw();
         });
 
         it('throw during setting user\'s point', function() {
-            (function() { test_client.modify_point('test', 42, 'test', 0); }).should.throw();
+            (function() {
+                testClient.modifyPoint('test', 42, 'test', 0);
+            }).should.throw();
         });
 
         it('does not throw during getting notices', function() {
-            test_client.get_notice().should.not.throw();
+            testClient.getNotice().should.not.throw();
         });
     });
 });
