@@ -1,6 +1,6 @@
 {
-  "name": "UserProfile",
-  "plural": "UserProfiles",
+  "name": "Person",
+  "plural": "People",
   "base": "User",
   "idInjection": true,
   "options": {

@@ -32,7 +32,7 @@
     "dataSource": "db",
     "public": false
   },
-  "UserProfile": {
+  "Person": {
     "dataSource": "db",
     "public": true
   }
