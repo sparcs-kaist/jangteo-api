@@ -22,5 +22,5 @@ db.isActual(customModels, function(err, actual) {
     });
   }
   console.log('Custom model migration success');
-})
+});
 
