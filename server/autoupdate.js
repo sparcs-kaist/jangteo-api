@@ -10,7 +10,17 @@ db.isActual(appModels, function(err, actual) {
       if (err) throw err;
     });
   }
-  console.log('migration success');
+  console.log('Built-in model migration success');
 });
 
+var customModels = ['UserProfile'];
+
+db.isActual(customModels, function(err, actual) {
+  if(!actual) {
+    db.autoupdate(customModels, function(err) {
+      if (err) throw err;
+    });
+  }
+  console.log('Custom model migration success');
+})
 
