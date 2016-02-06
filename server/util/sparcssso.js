@@ -1,4 +1,5 @@
-var request = require('request');
+var Q = require('q');
+var rp = require('request-promise');
 
 
 // SPARCS SSO Client Version 0.1.0 (ALPHA)
@@ -7,107 +8,113 @@ var request = require('request');
 
 
 if (!String.prototype.format) {
-    String.prototype.format = function() {
-        var args = arguments;
-        return this.replace(/{(\d+)}/g, function(match, number) { 
-            return typeof args[number] !== 'undefined' ? args[number] : match;
-        });
-    };
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] !== 'undefined' ? args[number] : match;
+    });
+  };
 }
 
 
 var Client = function(isTest, appName, secretKey) {
-    var API_BASE_URL = 'https://sparcssso.kaist.ac.kr/api/v1/';
-    var REQUIRE_BASE_URL = '{0}token/require/'.format(API_BASE_URL);
-    var INFO_BASE_URL = '{0}token/info/'.format(API_BASE_URL);
-    var POINT_BASE_URL = '{0}point/'.format(API_BASE_URL);
-    var NOTICE_BASE_URL = '{0}notice/'.format(API_BASE_URL);
+  var API_BASE_URL = 'https://sparcssso.kaist.ac.kr/api/v1/';
+  var REQUIRE_BASE_URL = '{0}token/require/'.format(API_BASE_URL);
+  var INFO_BASE_URL = '{0}token/info/'.format(API_BASE_URL);
+  var POINT_BASE_URL = '{0}point/'.format(API_BASE_URL);
+  var NOTICE_BASE_URL = '{0}notice/'.format(API_BASE_URL);
 
-    this.isTest = typeof isTest !== 'undefined' ? isTest : false;
-    this.appName = appName;
-    this.secretKey = secretKey;
+  this.isTest = typeof isTest !== 'undefined' ? isTest : false;
+  this.appName = appName;
+  this.secretKey = secretKey;
 
-    var postData = function(url, data) {
-        var result = {};
-        request({
-            url: url,
-            mehthod: 'POST',
-            form: data
-        }, function(error, resp, body) {
-            if (error)
-                throw new Error('SSO_UNKNOWN');
-            else if (resp.statusCode === 403)
-                throw new Error('SSO_INVALID_SECRET_KEY');
-            else if (resp.statusCode === 404)
-                throw new Error('SSO_INVALID_TOKEN');
-            else if (resp.statusCode !== 200)
-                throw new Error('SSO_UNKNOWN');
-            result = JSON.parse(body);
-        });
-        return result;
-    };
+  var postData = function(uri, data) {
+    return rp({
+      method: 'POST',
+      uri: uri,
+      form: data
+    })
+    .then(function (body) {
+      return JSON.parse(body);
+    })
+    .catch(function (reason) {
+      if (reason.statusCode === 403)
+        throw new Error('SSO_INVALID_SECRET_KEY');
+      else if (reason.statusCode === 404)
+        throw new Error('SSO_INVALID_TOKEN');
+      throw new Error('SSO_UNKNOWN');
+    });
+  };
 
-    this.getLoginUrl = function(callbackUrl) {
-        if (this.isTest && !callbackUrl)
-            throw new Error('SSO_CALLBACK_NEED');
+  var getData = function(url) {
+    return rp({
+      url: url,
+      method: 'GET',
+      json: true
+    })
+    .then(function (json) {
+        return json;
+    })
+    .catch(function (reason) {
+        throw new Error('SSO_UNKNOWN');
+    });
+  };
 
-        if (this.isTest)
-            return '{0}?url={1}'.format(REQUIRE_BASE_URL, callbackUrl);
-        return '{0}?app={1}'.format(REQUIRE_BASE_URL, this.appName);
-    };
+  this.getLoginUrl = function(callbackUrl) {
+    if (this.isTest && !callbackUrl)
+      throw new Error('SSO_CALLBACK_NEED');
 
-    this.getUserInfo = function(tokenid) {
-        var result = postData(INFO_BASE_URL,
-                           {
-                               'tokenid': tokenid,
-                               'key': this.secretKey
-                           });
-        return result;
-    };
+    if (this.isTest)
+      return '{0}?url={1}'.format(REQUIRE_BASE_URL, callbackUrl);
+    return '{0}?app={1}'.format(REQUIRE_BASE_URL, this.appName);
+  };
 
-    this.getPoint = function(sid) {
-        if (this.isTest)
-            throw new Error('SSO_NOT_SUPPORTED_ON_TEST');
+  this.getUserInfo = function(tokenid) {
+    return postData(INFO_BASE_URL,
+             {
+               'tokenid': tokenid,
+               'key': this.secretKey
+             });
+  };
 
-        var result = postData(POINT_BASE_URL,
-                           {
-                               'app': this.appName,
-                               'key': this.secretKey,
-                               'sid': sid
-                            });
-        return result['point'];
-    };
+  this.getPoint = function(sid) {
+    if (this.isTest)
+      throw new Error('SSO_NOT_SUPPORTED_ON_TEST');
+    else
+      return postData(POINT_BASE_URL,
+                      {
+                        'app': this.appName,
+                        'key': this.secretKey,
+                        'sid': sid
+                      })
+                      .then(function (data) {
+                        return data['point'];
+                      });
+  };
 
-    this.modifyPoint = function(sid, delta, action, lowerBound) {
-        if (this.isTest)
-            throw new Error('SSO_NOT_SUPPORTED_ON_TEST');
-        
-        lowerBound = typeof lowerBound !== 'undefined' ?
-                     lowerBound : -100000000;
-        var result = postData(POINT_BASE_URL,
-                           {
-                               'app': this.appName,
-                               'key': this.secretKey,
-                               'sid': sid,
-                               'delta': delta,
-                               'action': action,
-                               'lower_bound': lowerBound
-                           });
-        return result['changed'], result['point'];
-    };
+  this.modifyPoint = function(sid, delta, action, lowerBound) {
+    if (this.isTest)
+      throw new Error('SSO_NOT_SUPPORTED_ON_TEST');
+    else
+      lowerBound = typeof lowerBound !== 'undefined' ? lowerBound
+                                                     : -100000000;
+      return postData(POINT_BASE_URL,
+               {
+                 'app': this.appName,
+                 'key': this.secretKey,
+                 'sid': sid,
+                 'delta': delta,
+                 'action': action,
+                 'lower_bound': lowerBound
+               })
+               .then(function (data) {
+                 return data['changed'], data['point'];
+               });
+  };
 
-    this.getNotice = function() {
-        var result = {};
-        request({
-            url: NOTICE_BASE_URL,
-            mehthod: 'GET',
-        }, function(error, resp, body) {
-            if (error || resp.statusCode !== 200)
-                throw new Error('SSO_UNKNOWN');
-            result = JSON.parse(body);
-        });
-        return result;
-    };
+  this.getNotice = function() {
+    return getData(NOTICE_BASE_URL);
+  };
 };
 
 module.exports = Client;
