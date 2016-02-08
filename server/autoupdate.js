@@ -13,7 +13,7 @@ db.isActual(appModels, function(err, actual) {
   console.log('Built-in model migration success');
 });
 
-var customModels = ['Person'];
+var customModels = ['Person', 'nickname-history'];
 
 db.isActual(customModels, function(err, actual) {
   if(!actual) {

@@ -36,5 +36,9 @@
   "Person": {
     "dataSource": "db",
     "public": true
+  },
+  "nickname-history": {
+    "dataSource": "db",
+    "public": true
   }
 }
