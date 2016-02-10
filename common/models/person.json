@@ -17,19 +17,19 @@
     },
     "nicknameUpdateTime": {
       "type": "date",
-      "required": true
+      "required": false
     },
     "contact": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "credit": {
       "type": "number",
       "required": true
     },
     "profileImage": {
-      "type": "object",
-      "required": true
+      "type": "string",
+      "required": false
     }
   },
   "validations": [],

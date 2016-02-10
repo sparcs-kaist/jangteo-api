@@ -37,7 +37,7 @@ module.exports = function(Person) {
     ssoClient.getUserInfo(tokenid)
     .then(function (info) {
       var query = {'sid': info.sid};
-      
+
       self.findOne({where: query}, function(err, person) {
         var defaultError = new Error('login failed');
         defaultError.statusCode = 401;
@@ -54,8 +54,27 @@ module.exports = function(Person) {
           }
         } else {
           debug('No matching record is found for person %s', query.username);
-          // signup here!
-          fn(defaultError);
+          
+          var newInfo = {
+            sid: info.sid,
+            nickname: 'need to set',
+            contact: 'need to set',
+            credit: 0,
+            status: 'new',
+            email: info.email,
+            password: 'DuMMyPa55w0rD!',
+          };
+
+          Person.create(newInfo, function(err, person) {
+            if (err) {
+              fn(err);
+              //fn(defaultError);
+            } else if (person.createAccessToken.length === 2) {
+              person.createAccessToken(undefined, fn);
+            } else {
+              person.createAccessToken(undefined, tokenid, fn);
+            }
+          });
         }
       });
       return fn.promise;
