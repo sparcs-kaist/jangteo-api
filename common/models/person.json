@@ -17,11 +17,11 @@
     },
     "nicknameUpdateTime": {
       "type": "date",
-      "required": false
+      "required": true
     },
     "contact": {
       "type": "string",
-      "required": false
+      "required": true
     },
     "credit": {
       "type": "number",
