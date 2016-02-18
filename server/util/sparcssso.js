@@ -10,7 +10,7 @@ var rp = require('request-promise');
 if (!String.prototype.format) {
   String.prototype.format = function() {
     var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) { 
+    return this.replace(/{(\d+)}/g, function(match, number) {
       return typeof args[number] !== 'undefined' ? args[number] : match;
     });
   };
@@ -35,7 +35,7 @@ var Client = function(isTest, appName, secretKey) {
       form: data
     })
     .then(function (body) {
-      return JSON.parse(body);
+      return Q.resolve(JSON.parse(body));
     })
     .catch(function (reason) {
       if (reason.statusCode === 403)
