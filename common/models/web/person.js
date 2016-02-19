@@ -2,6 +2,7 @@ var Client = require('../../../server/util/sparcssso');
 var ssoClient = new Client(true);
 var debug = require('debug')('loopback:person');
 var errorHandler = require('../../../server/util/error-handler');
+var loopback = require('loopback');
 
 module.exports = function(Person) {
   'use strict';
@@ -19,7 +20,6 @@ module.exports = function(Person) {
    * @param {Error} err Error object
    * @param {AccessToken} token Access token if login is successful
    */
-
   Person.loginCallback = function(tokenid, cb) {
     var info;
     ssoClient.getUserInfo(tokenid).then(function (_info) {
@@ -90,6 +90,61 @@ module.exports = function(Person) {
         'on login.'
       },
       http: {verb: 'get'}
+    }
+  );
+  Person.changeNickname = function(name, cb) {
+    var person;
+    var ctx = loopback.getCurrentContext();
+    var accessToken = ctx.get('accessToken');
+    if(!accessToken) {
+      throw errorHandler.AuthorizationError('Invalid accessToken');
+    }
+    var personId = accessToken.userId;
+    Person.findById(personId).then(function(_person) {
+      person = _person;
+      if (!person) {
+        throw errorHandler.AuthorizationError('Login failed');
+      }
+      var app = require('../../../server/server');
+      var nicknameHistory = app.models.Nicknamehistory;
+      var query = {
+        nickname: name
+      };
+      return nicknameHistory.find({where: query});
+    }).then(function (nicknameHistories) {
+      if(nicknameHistories.length) {
+        throw errorHandler.ValidationError('Nickname already exists');
+      }
+      return person.updateAttribute('nickname', name);
+    }).then(function (_person) {
+      var now = new Date();
+      var nowStr = now.toISOString().slice(0, 10);
+      var newNickname = {
+        nickname: name,
+        time: nowStr,
+      };
+      return person.nicknameHistories.create(newNickname);
+    }).then(function (nicknamehistory) {
+      cb(null, 'success');
+    }).catch(function(err) {
+      cb(err);
+    });
+  };
+  Person.remoteMethod(
+    'changeNickname',
+    {
+      description: 'Change the nickname of user.',
+      accepts: [
+        {
+          arg: 'name',
+          type: 'string',
+          required: true
+        }
+      ],
+      returns: {
+        arg: 'result',
+        type: 'string'
+      }
     }
   );
 };

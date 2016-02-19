@@ -29,13 +29,25 @@
     }
   },
   "validations": [],
-  "relations": {},
+  "relations": {
+    "nicknameHistories": {
+      "type": "hasMany",
+      "model": "Nicknamehistory",
+      "foreignKey": "personId"
+    }
+  },
   "acls": [
     {
       "principalType": "ROLE",
       "principalId": "$everyone",
       "permission": "ALLOW",
       "property": "loginCallback"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "changeNickname"
     }
   ],
   "methods": {}
