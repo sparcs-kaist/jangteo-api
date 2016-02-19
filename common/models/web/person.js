@@ -124,8 +124,8 @@ module.exports = function(Person) {
         time: nowStr,
       };
       return person.nicknameHistories.create(newNickname);
-    }).then(function (nicknamehistory) {
-      cb(null, 'success');
+    }).then(function (nicknameHistory) {
+      cb(null, nicknameHistory);
     }).catch(function(err) {
       cb(err);
     });
@@ -142,8 +142,13 @@ module.exports = function(Person) {
         }
       ],
       returns: {
+<<<<<<< 056cef0d754f140ebefc7ec41c7f9b58bf367bcd
         arg: 'result',
         type: 'string'
+=======
+        arg: 'nicknameHistory',
+        type: 'object'
+>>>>>>> Implement changeNickname method.
       }
     }
   );
