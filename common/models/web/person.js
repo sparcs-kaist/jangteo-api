@@ -106,7 +106,7 @@ module.exports = function(Person) {
         throw errorHandler.AuthorizationError('Login failed');
       }
       var app = require('../../../server/server');
-      var nicknameHistory = app.models.Nicknamehistory;
+      var nicknameHistory = app.models.NicknameHistory;
       var query = {
         nickname: name
       };
@@ -142,13 +142,8 @@ module.exports = function(Person) {
         }
       ],
       returns: {
-<<<<<<< 056cef0d754f140ebefc7ec41c7f9b58bf367bcd
-        arg: 'result',
-        type: 'string'
-=======
         arg: 'nicknameHistory',
         type: 'object'
->>>>>>> Implement changeNickname method.
       }
     }
   );

@@ -17,7 +17,7 @@ var db = app.dataSources.db;
   }
 
   function migrateCustomModels() {
-    var customModels = ['Person', 'Nicknamehistory'];
+    var customModels = ['Person', 'NicknameHistory'];
     db.isActual(customModels, function (err, actual) {
       if (!actual) {
         db.autoupdate(customModels, function (err) {

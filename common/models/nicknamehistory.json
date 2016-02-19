@@ -1,6 +1,6 @@
 {
-  "name": "Nicknamehistory",
-  "plural": "Nicknamehistories",
+  "name": "NicknameHistory",
+  "plural": "NicknameHistories",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {

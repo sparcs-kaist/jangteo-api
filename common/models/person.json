@@ -32,7 +32,7 @@
   "relations": {
     "nicknameHistories": {
       "type": "hasMany",
-      "model": "Nicknamehistory",
+      "model": "NicknameHistory",
       "foreignKey": "personId"
     }
   },
