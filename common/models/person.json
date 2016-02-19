@@ -15,10 +15,6 @@
       "type": "string",
       "required": true
     },
-    "nicknameUpdateTime": {
-      "type": "date",
-      "required": true
-    },
     "contact": {
       "type": "string",
       "required": true
@@ -28,8 +24,8 @@
       "required": true
     },
     "profileImage": {
-      "type": "object",
-      "required": true
+      "type": "string",
+      "required": false
     }
   },
   "validations": [],
