@@ -147,4 +147,21 @@ module.exports = function(Person) {
       }
     }
   );
+  // Before save person model, check whether nick name is used or not
+  Person.observe('before save', function checkNickname(ctx, next) {
+    var app = require('../../../server/server');
+    var nicknameHistory = app.models.NicknameHistory;
+    var query = {
+      nickname: ctx.instance.nickname
+    };
+    // Check nickname is used
+    nicknameHistory.find({where: query}).then(function(nicknameHistories) {
+      if (nicknameHistories.length) {
+        var err = new Error('Nickname already exists');
+        err.statusCode = 422;
+        next(err);
+      }
+    });
+    next();
+  });
 };
