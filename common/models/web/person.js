@@ -30,10 +30,13 @@ module.exports = function(Person) {
       var query = {
         sid: info.sid
       };
+      console.log(query);
       return Person.findOne({where: query});
     }).then(function (person) {
       var now = new Date();
       var nowStr = now.toISOString().slice(0, 10);
+      console.log(nowStr);
+      console.log(person);
       if (person) {
         return person.updateAttribute('lastUpdated', nowStr);
       } else {
@@ -47,6 +50,7 @@ module.exports = function(Person) {
           password: 'DuMMyPa55w0rD!',
           created: nowStr
         };
+        console.log('create');
         return Person.create(newInfo);
       }
     }).then(function (person) {
@@ -81,7 +85,7 @@ module.exports = function(Person) {
           http: {
             source: 'query'
           }
-        },
+        }
       ],
       returns: {
         arg: 'accessToken', type: 'object', root: true,
@@ -92,76 +96,55 @@ module.exports = function(Person) {
       http: {verb: 'get'}
     }
   );
-  Person.changeNickname = function(name, cb) {
-    var person;
-    var ctx = loopback.getCurrentContext();
-    var accessToken = ctx.get('accessToken');
-    if(!accessToken) {
-      throw errorHandler.AuthorizationError('Invalid accessToken');
-    }
-    var personId = accessToken.userId;
-    Person.findById(personId).then(function(_person) {
-      person = _person;
-      if (!person) {
-        throw errorHandler.AuthorizationError('Login failed');
-      }
+  /**
+   * Check validation of nickname for attribute updates
+   * triggered by PUT People/:id (id is user id of authenticated user)
+   *
+   */
+  Person.beforeRemote('prototype.updateAttributes', function(ctx, person, next) {
+    var nickname = ctx.args.data.nickname;
+    if (nickname) {
+      var query = {
+        nickname: nickname
+      };
       var app = require('../../../server/server');
       var nicknameHistory = app.models.NicknameHistory;
-      var query = {
-        nickname: name
-      };
-      return nicknameHistory.find({where: query});
-    }).then(function (nicknameHistories) {
-      if(nicknameHistories.length) {
-        throw errorHandler.ValidationError('Nickname already exists');
-      }
-      return person.updateAttribute('nickname', name);
-    }).then(function (_person) {
-      var now = new Date();
-      var nowStr = now.toISOString().slice(0, 10);
-      var newNickname = {
-        nickname: name,
-        time: nowStr,
-      };
-      return person.nicknameHistories.create(newNickname);
-    }).then(function (nicknameHistory) {
-      cb(null, nicknameHistory);
-    }).catch(function(err) {
-      cb(err);
-    });
-  };
-  Person.remoteMethod(
-    'changeNickname',
-    {
-      description: 'Change the nickname of user.',
-      accepts: [
-        {
-          arg: 'name',
-          type: 'string',
-          required: true
+      nicknameHistory.find({where: query}).then(function(nicknameHistories) {
+        if (nicknameHistories.length) {
+          var err = new Error('Nickname already exists');
+          err.statusCode = 422;
+          next(err);
+        } else {
+          next();
         }
-      ],
-      returns: {
-        arg: 'nicknameHistory',
-        type: 'object'
-      }
+      })
+    } else {
+      next();
     }
-  );
-  // Before save person model, check whether nick name is used or not
-  Person.observe('before save', function checkNickname(ctx, next) {
-    var app = require('../../../server/server');
-    var nicknameHistory = app.models.NicknameHistory;
-    var query = {
-      nickname: ctx.instance.nickname
-    };
-    // Check nickname is used
-    nicknameHistory.find({where: query}).then(function(nicknameHistories) {
-      if (nicknameHistories.length) {
-        var err = new Error('Nickname already exists');
-        err.statusCode = 422;
+  });
+  /**
+   * Triggered by after update. If user updated nickname properly,
+   * create new nickname history model
+   */
+  Person.afterRemote('prototype.updateAttributes', function(ctx, person, next) {
+    var nickname = ctx.args.data.nickname;
+    if (nickname) {
+      var now = new Date();
+      var newNickname = {
+        nickname: nickname,
+        time: now
+      };
+      person.nicknameHistories.create(newNickname).then(function(nicknameHistory){
+        next();
+      }).catch(function(err){
         next(err);
-      }
-    });
+      });
+    } else {
+      next();
+    }
+  });
+  Person.afterRemoteError('prototype.updateAttributes', function(ctx, next){
+    console.log(ctx.error);  //for debugging
     next();
   });
 };
