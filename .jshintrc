@@ -18,5 +18,5 @@
   "trailing": true,
   "sub": true,
   "mocha": true,
-  "maxlen": 80
+  "maxlen": 100
 }

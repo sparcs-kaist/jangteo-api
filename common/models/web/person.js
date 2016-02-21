@@ -117,7 +117,7 @@ module.exports = function(Person) {
         } else {
           next();
         }
-      })
+      });
     } else {
       next();
     }
