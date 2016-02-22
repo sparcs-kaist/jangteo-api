@@ -30,13 +30,10 @@ module.exports = function(Person) {
       var query = {
         sid: info.sid
       };
-      console.log(query);
       return Person.findOne({where: query});
     }).then(function (person) {
       var now = new Date();
       var nowStr = now.toISOString().slice(0, 10);
-      console.log(nowStr);
-      console.log(person);
       if (person) {
         return person.updateAttribute('lastUpdated', nowStr);
       } else {
@@ -50,7 +47,6 @@ module.exports = function(Person) {
           password: 'DuMMyPa55w0rD!',
           created: nowStr
         };
-        console.log('create');
         return Person.create(newInfo);
       }
     }).then(function (person) {
@@ -104,6 +100,9 @@ module.exports = function(Person) {
   Person.beforeRemote('prototype.updateAttributes', function(ctx, person, next) {
     var nickname = ctx.args.data.nickname;
     if (nickname) {
+      if (nickname === ctx.instance.nickname) {
+        return next();
+      }
       var query = {
         nickname: nickname
       };
@@ -115,6 +114,8 @@ module.exports = function(Person) {
           err.statusCode = 422;
           next(err);
         } else {
+          var loopbackCtx = loopback.getCurrentContext();
+          loopbackCtx.nicknameChanged = true;
           next();
         }
       });
@@ -128,7 +129,9 @@ module.exports = function(Person) {
    */
   Person.afterRemote('prototype.updateAttributes', function(ctx, person, next) {
     var nickname = ctx.args.data.nickname;
-    if (nickname) {
+    var loopbackCtx = loopback.getCurrentContext();
+    if (loopbackCtx.nicknameChanged) {
+      delete loopbackCtx.nicknameChanged;
       var now = new Date();
       var newNickname = {
         nickname: nickname,
