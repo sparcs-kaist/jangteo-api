@@ -2,6 +2,7 @@ var Client = require('../../../server/util/sparcssso');
 var ssoClient = new Client(true);
 var debug = require('debug')('loopback:person');
 var errorHandler = require('../../../server/util/error-handler');
+var loopback = require('loopback');
 
 module.exports = function(Person) {
   'use strict';
@@ -19,7 +20,6 @@ module.exports = function(Person) {
    * @param {Error} err Error object
    * @param {AccessToken} token Access token if login is successful
    */
-
   Person.loginCallback = function(tokenid, cb) {
     var info;
     ssoClient.getUserInfo(tokenid).then(function (_info) {
@@ -81,7 +81,7 @@ module.exports = function(Person) {
           http: {
             source: 'query'
           }
-        },
+        }
       ],
       returns: {
         arg: 'accessToken', type: 'object', root: true,
@@ -92,4 +92,62 @@ module.exports = function(Person) {
       http: {verb: 'get'}
     }
   );
+  /**
+   * Check validation of nickname for attribute updates
+   * triggered by PUT People/:id (id is user id of authenticated user)
+   *
+   */
+  Person.beforeRemote('prototype.updateAttributes', function(ctx, person, next) {
+    var nickname = ctx.args.data.nickname;
+    if (nickname) {
+      if (nickname === ctx.instance.nickname) {
+        return next();
+      }
+      var query = {
+        nickname: nickname
+      };
+      var app = require('../../../server/server');
+      var nicknameHistory = app.models.NicknameHistory;
+      nicknameHistory.find({where: query}).then(function(nicknameHistories) {
+        if (nicknameHistories.length) {
+          var err = new Error('Nickname already exists');
+          err.statusCode = 422;
+          next(err);
+        } else {
+          var loopbackCtx = loopback.getCurrentContext();
+          loopbackCtx.nicknameChanged = true;
+          next();
+        }
+      });
+    } else {
+      next();
+    }
+  });
+  /**
+   * Triggered by after update. If user updated nickname properly,
+   * create new nickname history model
+   */
+  Person.afterRemote('prototype.updateAttributes', function(ctx, person, next) {
+    var nickname = ctx.args.data.nickname;
+    var loopbackCtx = loopback.getCurrentContext();
+    if (loopbackCtx.nicknameChanged) {
+      delete loopbackCtx.nicknameChanged;
+      var now = new Date();
+      var newNickname = {
+        nickname: nickname,
+        time: now
+      };
+      person.nicknameHistories.create(newNickname).then(function(nicknameHistory){
+        next();
+      }).catch(function(err){
+        next(err);
+      });
+    } else {
+      next();
+    }
+  });
+  Person.afterRemoteError('prototype.updateAttributes', function(ctx, next){
+    console.log(ctx.error);  //for debugging
+    next();
+  });
 };
